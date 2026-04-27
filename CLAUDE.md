@@ -14,6 +14,7 @@
 The full design lives in an Obsidian vault outside this Unity project:
 
 - **Vault path:** `C:\CinSoftGames`
+- **Workflow document:** `00-09 Plánovanie/02 Workflow vývoja hier.md` — read this first; it defines how the vault, this Unity project, and Claude Code work together
 - **Game folder in vault:** `20 Games/21 Learning Games/21.01 SpaceRunner/`
 
 Design notes (consult when working on the matching domain):
@@ -32,6 +33,26 @@ Process notes (in `_Operatíva/`):
 - `Otvorené otázky.md` — open design risks under validation
 
 Vault and notes are written in Slovak. Code stays English.
+
+## Working with the Obsidian Vault
+
+This project is documented in an Obsidian vault outside this Unity project (see *Documentation* above). To access it, launch Claude Code with:
+
+```bash
+claude --add-dir C:\CinSoftGames
+```
+
+The vault is the **single source of truth** for all design and architectural decisions. The full workflow contract is in `00-09 Plánovanie/02 Workflow vývoja hier.md` — consult it for the complete set of rules. Key rules summarized here:
+
+- **Do NOT create new notes in the vault without explicit user approval.** Editing existing notes (Devlog, Architecture, TO-DO, Open Questions) is fine.
+- **Do NOT delete existing content.** Add and update; never overwrite entire sections or remove prior entries.
+- **Devlog (`_Operatíva/Devlog.md`):** newest entries on top. Use the existing entry structure: date heading + *Čo som robil* / *Na čo som narazil* / *Ako som to vyriešil* / `#do-knowledge` (optional). Write in first person from the user's perspective — the devlog is theirs, not yours. When unsure, draft briefly and let the user refine on review.
+- **Architecture note (`21.01.07 Architektúra.md`):** level B detail only — public APIs, responsibilities, invariants. No private methods or implementation details.
+- **When implementation diverges from architecture, update the architecture note in the same logical commit as the code.** Drift between doc and code is the failure mode to avoid.
+- **TO-DO (`_Operatíva/TO-DO.md`):** do not move tasks from *Otvorené* to *Hotové* without explicit user approval. Suggest the move; don't perform it.
+- **Open Questions (`_Operatíva/Otvorené otázky.md`):** when closing a question, move it to the *Uzavreté* section with the resolution and date. Do not delete open questions.
+
+Note: the vault and notes are written in Slovak. Code, identifiers, and technical comments stay in English.
 
 ## Project Structure (Assets/)
 

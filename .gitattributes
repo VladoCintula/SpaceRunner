@@ -1,0 +1,29 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force Unity files to be treated as text (already YAML, but explicit)
+*.cs text diff=csharp
+*.shader text
+*.cginc text
+*.hlsl text
+*.json text
+*.xml text
+*.md text
+
+# Unity binary asset types
+*.asset binary
+*.unity binary
+*.prefab binary
+
+# Common binary asset types
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.psd binary
+*.fbx binary
+*.obj binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.ttf binary

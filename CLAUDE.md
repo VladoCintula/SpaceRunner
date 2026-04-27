@@ -54,6 +54,43 @@ The vault is the **single source of truth** for all design and architectural dec
 
 Note: the vault and notes are written in Slovak. Code, identifiers, and technical comments stay in English.
 
+## Pedagogical Context
+
+This is a **learning project**. The user's goal is growth, not just shipping the game. Without explicit pedagogical structure, the default risk is "Claude Code writes everything, user accepts, learns nothing." These rules prevent that.
+
+### User's starting knowledge
+
+- **Languages:** intermediate in C# and Python; prior background in Java
+- **OOP fundamentals:** comfortable with classes, inheritance, polymorphism, interfaces
+- **OOP advanced:** lacks depth in singletons, observer pattern (custom events / listeners), dependency injection, state machines
+- **Unity Editor:** comfortable navigating
+- **Unity best practices:** basic ("separate logic from graphics"); no systematic exposure
+
+### Rules for Claude Code
+
+1. **Do not introduce advanced patterns proactively.** Singleton, observer/custom events, dependency injection, ScriptableObjects as data containers, coroutines, async/await, state machine, object pooling — none of these gets implemented without prior discussion in Claude.ai. If a pattern feels needed, **stop and tell the user** "this would be a good place for pattern X — discuss in Claude.ai first?" rather than implementing it.
+
+2. **Prefer the simpler approach over the more elegant one** when it doesn't break the design. Object pooling can wait until performance actually demands it. The advanced concept gets introduced *after* the user recognizes its value, not before.
+
+3. **Comments explain *why*, not *what*.** *What* is visible from the code. *Why* fades within a week. For non-obvious choices (event vs. direct call, ScriptableObject vs. plain class, etc.) leave a short rationale comment.
+
+4. **For architectural decisions, write the rationale in the relevant per-class document** in `_Architektúra/` (section *Architektonické rozhodnutia*). Without this, the logic of the choice is lost on review a month later.
+
+5. **Code style: readability over cleverness.** If a more advanced and a simpler approach both work, pick the simpler one — until the user is comfortable with the more advanced.
+
+6. **When the user asks "why did we do X this way?"** — answer in detail, give alternatives, give trade-offs. This is a learning question, not a request for confirmation.
+
+7. **Implementation modes per task:**
+   - **Fully Claude Code** — only for routine boilerplate the user asked to be done that way
+   - **Pair programming (default)** — Claude Code provides skeleton + signatures; user fills in method bodies. The user decides which methods they want to write themselves
+   - **Fully user** — for learning-critical code (first observer pattern, first state machine, first use of a newly Stop & Learned concept). User asks for review afterward
+
+   Default if not specified: pair programming with the user filling in non-trivial logic.
+
+8. **One or two new concepts per session, max.** When implementation would introduce 3+ new concepts at once, stop and propose splitting the work — either across sessions, or by simplifying scope.
+
+The full pedagogical workflow (pre-implementation discovery, Stop & Learn ritual, code review cadence, knowledge harvest) is documented in `C:\CinSoftGames\00-09 Plánovanie\02 Workflow vývoja hier.md`, section *Pedagogický rozmer workflow-u*.
+
 ## Project Structure (Assets/)
 
 ```

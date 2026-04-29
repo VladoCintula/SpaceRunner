@@ -9,6 +9,8 @@
 - **Input:** Mouse only (LMB = fire, cursor position drives ship orientation and velocity)
 - **Target platform:** Windows
 
+Input: Old Input Manager (UnityEngine.Input.*). The New Input System package is not used — it would be over-engineering for mouse-only control.
+
 ## Documentation
 
 The full design lives in an Obsidian vault outside this Unity project:
@@ -93,26 +95,31 @@ The full pedagogical workflow (pre-implementation discovery, Stop & Learn ritual
 
 ## Project Structure (Assets/)
 
+The `Assets/Scripts/` folder structure follows the system map in the architecture document — one folder per domain. There is no `Core/` folder; every domain has an explicit name.
+
 ```
 Assets/
 ├── Scripts/
-│   ├── Core/         # GameManager, LevelLoader, GameState
-│   ├── Player/       # Ship movement, input, rotation
-│   ├── Weapons/      # Projectile, fire rate, weapon system
-│   ├── Meteorites/   # Meteor base, sizes, spawner
-│   ├── PowerUps/     # PU base, FireRatePU, ShieldPU
-│   ├── HUD/          # Level progress, shield/fire counters
-│   └── Audio/        # MusicController, SFX manager
+│   ├── Player/         # ship movement, shield, shooting trigger
+│   ├── Weapons/        # projectiles, projectile spawner
+│   ├── Meteorites/     # meteorites, meteorite spawner
+│   ├── PowerUps/       # power-up entities, power-up spawner
+│   ├── World/          # corridor, walls, scrolling, distance tracking
+│   ├── LevelSystem/    # level config, level transitions
+│   ├── GameFlow/       # screen state machine, transitions, time scale
+│   ├── HUD/            # all UI elements (left panel, right panel)
+│   ├── Audio/          # music controller, SFX manager
+│   └── Persistence/    # save/load (per-level progress, settings)
 ├── Prefabs/
 ├── Scenes/
 ├── Sprites/
-├── Audio/Music/      # 3 gameplay tracks + 1 menu track
+├── Audio/Music/        # 3 gameplay tracks + 1 menu track
 ├── Audio/SFX/
 ├── Materials/
-└── Settings/         # URP renderer asset, Input actions
+└── Settings/           # URP renderer asset
 ```
 
-Each `Scripts/` subfolder maps 1:1 to a design note in the vault.
+Single source of truth for the folder-to-domain mapping is `21.01.07 Architektúra.md`, section *Fyzická štruktúra Unity projektu*. When the structure changes, update the architecture note first, this block second.
 
 ## Coding Conventions
 

@@ -46,16 +46,39 @@ claude --add-dir C:\CinSoftGames
 
 The vault is the **single source of truth** for all design and architectural decisions. The full workflow contract is in `00-09 Plánovanie/02 Workflow vývoja hier.md` — consult it for the complete set of rules. Key rules summarized here:
 
-- **Do NOT create new notes in the vault without explicit user approval.** Editing existing notes (Devlog, Architecture, TO-DO, Open Questions) is fine.
-- **Do NOT delete existing content.** Add and update; never overwrite entire sections or remove prior entries.
-- **Devlog (`_Operatíva/Devlog.md`):** newest entries on top. Use the existing entry structure: date heading + *Čo som robil* / *Na čo som narazil* / *Ako som to vyriešil* / `#do-knowledge` (optional). Write in first person from the user's perspective — the devlog is theirs, not yours. When unsure, draft briefly and let the user refine on review.
-- **Architecture note (`21.01.07 Architektúra.md`):** level B detail only — public APIs, responsibilities, invariants. No private methods or implementation details.
-- **When implementation diverges from architecture, update the architecture note in the same logical commit as the code.** Drift between doc and code is the failure mode to avoid.
-- **TO-DO (`_Operatíva/TO-DO.md`):** do not move tasks from *Otvorené* to *Hotové* without explicit user approval. Suggest the move; don't perform it.
-- **Open Questions (`_Operatíva/Otvorené otázky.md`):** when closing a question, move it to the *Uzavreté* section with the resolution and date. Do not delete open questions.
+### Vault write scope
+
+Your write access is **limited to the `_Architektúra/` subfolder** of the current game (per-class `.md` docs, Canvas `.canvas` files, the operational `_Návrhy úprav.md`). Outside this subfolder you have **read access only** — this includes design notes, master architecture, Devlog, TO-DO, Open Questions, and all planning/knowledge folders.
+
+If a task requires changes outside this scope, log a proposal entry in `_Architektúra/_Návrhy úprav.md`. **This applies even when the user explicitly asks for the edit elsewhere** — respond with "I'm logging this as a proposal for review in Claude.ai." Planning, design, and learning discussions happen in Claude.ai; you don't have that context.
+
+### Proposal buffer (`_Návrhy úprav.md`)
+
+When you identify a change outside `_Architektúra/` (Devlog entry to draft, TO-DO item to add, design note inconsistency, code issue outside refactoring scope, etc.), log it as an entry in `_Architektúra/_Návrhy úprav.md`. Don't apply the change to the target document.
+
+Entry format (newest at top of *Otvorené návrhy*):
+```
+### YYYY-MM-DD — Short title
+**Cieľový dokument:** relative path (or "kód: <path>")
+**Návrh:** description
+(optional) **Kontext:** why this is needed
+```
+
+The user reviews proposals in Claude.ai sessions and applies sensible ones manually.
+
+### Architectural rationale — only actual design decisions
+
+In per-class documents, the *Architektonické rozhodnutia (prečo)* section is for **decisions that were actually deliberated** during design (typically captured in master Architektúra, design notes, Devlog, or sibling per-class docs). Cite or paraphrase that source.
+
+If rationale is **not captured anywhere**, write a neutral description (e.g. "class uses pattern X" with no "why"), and log a proposal in `_Návrhy úprav.md` flagging "rationale missing." **Do not reconstruct rationale from code.** Technical or forced choices (Unity API calls, language idioms, math conventions) get neutral descriptions, not fabricated "why" justifications.
+
+### Other vault rules
+
+- **Do NOT delete existing content** anywhere in the vault. Add and update only.
+- **Architecture note (`21.01.07 Architektúra.md`):** level B detail only — public APIs, responsibilities, invariants. No private methods or implementation details. (Read-only for you; propose master-level changes via `_Návrhy úprav.md`.)
+- **When code diverges from per-class architecture docs, update the per-class doc in the same commit as the code.** Drift is the failure mode.
 
 Note: the vault and notes are written in Slovak. Code, identifiers, and technical comments stay in English.
-
 ## Pedagogical Context
 
 This is a **learning project**. The user's goal is growth, not just shipping the game. Without explicit pedagogical structure, the default risk is "Claude Code writes everything, user accepts, learns nothing." These rules prevent that.

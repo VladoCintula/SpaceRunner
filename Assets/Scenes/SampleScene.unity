@@ -119,6 +119,59 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &162810826
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 162810828}
+  - component: {fileID: 162810827}
+  m_Layer: 0
+  m_Name: WallSpawner_Right
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &162810827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 162810826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be37e1ef2eb56004cafe1896c83fa8cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.World.WallSpawner
+  _wallPrefabs:
+  - {fileID: 5278856687011775721, guid: 75a24c5cd6f68fa4c8d9d633abc45a29, type: 3}
+  - {fileID: 5278856687011775721, guid: 48cc4a3f5387458469b57f8085a32920, type: 3}
+  - {fileID: 5278856687011775721, guid: 4d9f7e8fe96a26f498572da3fd8c0beb, type: 3}
+  - {fileID: 5278856687011775721, guid: a25ea1bb67d41a94dbb5acfddb0ec186, type: 3}
+  - {fileID: 5278856687011775721, guid: 76901ced5acf0e54ca6b85515c281936, type: 3}
+  - {fileID: 5278856687011775721, guid: 7dc8ad100cfe6284e8844cfe55d383ab, type: 3}
+  _flipHorizontally: 1
+  _player: {fileID: 1691035014}
+--- !u!4 &162810828
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 162810826}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5, y: 6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &396737281
 GameObject:
   m_ObjectHideFlags: 0
@@ -165,6 +218,59 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DistanceTracker
   _playerMovement: {fileID: 1691035014}
   _milestoneInterval: 100
+--- !u!1 &398570574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 398570575}
+  - component: {fileID: 398570576}
+  m_Layer: 0
+  m_Name: WallSpawner_Left
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &398570575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 398570574}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5, y: 6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &398570576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 398570574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be37e1ef2eb56004cafe1896c83fa8cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.World.WallSpawner
+  _wallPrefabs:
+  - {fileID: 5278856687011775721, guid: 75a24c5cd6f68fa4c8d9d633abc45a29, type: 3}
+  - {fileID: 5278856687011775721, guid: 48cc4a3f5387458469b57f8085a32920, type: 3}
+  - {fileID: 5278856687011775721, guid: 4d9f7e8fe96a26f498572da3fd8c0beb, type: 3}
+  - {fileID: 5278856687011775721, guid: a25ea1bb67d41a94dbb5acfddb0ec186, type: 3}
+  - {fileID: 5278856687011775721, guid: 76901ced5acf0e54ca6b85515c281936, type: 3}
+  - {fileID: 5278856687011775721, guid: 7dc8ad100cfe6284e8844cfe55d383ab, type: 3}
+  _flipHorizontally: 0
+  _player: {fileID: 1691035014}
 --- !u!1 &402032337
 GameObject:
   m_ObjectHideFlags: 0
@@ -865,3 +971,5 @@ SceneRoots:
   - {fileID: 1541990747}
   - {fileID: 2110568137}
   - {fileID: 1650778050}
+  - {fileID: 398570575}
+  - {fileID: 162810828}

@@ -1,16 +1,18 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// Riadi pohyb a natočenie hráčovej lode podľa pozície kurzora myši.
-///
-/// Pohybový model: konštantná celková rýchlosť v_max, rozkladá sa cez sin(uhol)
-/// na horizontálny pohyb. Lod má fixnú y-pozíciu, vertikálna zložka pohybu sa
-/// neaplikuje na pozíciu, ale je dostupná pre iné systémy cez CurrentAngleRadians
-/// (napr. DistanceTracker pre cos-projekciu progresu v leveli).
-///
-/// Detail dizajnového rozhodnutia v 21.01.01 Koncept.md, sekcia "Pohybový model lode".
-/// </summary>
-public class PlayerMovement : MonoBehaviour
+namespace SpaceRunner.Player
+{
+    /// <summary>
+    /// Riadi pohyb a natočenie hráčovej lode podľa pozície kurzora myši.
+    ///
+    /// Pohybový model: konštantná celková rýchlosť v_max, rozkladá sa cez sin(uhol)
+    /// na horizontálny pohyb. Lod má fixnú y-pozíciu, vertikálna zložka pohybu sa
+    /// neaplikuje na pozíciu, ale je dostupná pre iné systémy cez CurrentAngleRadians
+    /// (napr. DistanceTracker pre cos-projekciu progresu v leveli).
+    ///
+    /// Detail dizajnového rozhodnutia v 21.01.01 Koncept.md, sekcia "Pohybový model lode".
+    /// </summary>
+    public class PlayerMovement : MonoBehaviour
 {
     [Header("Pohybové parametre")]
     [Tooltip("Maximálna celková rýchlosť lode (world units / sec). Horizontálny pohyb = v_max × sin(uhol).")]
@@ -82,4 +84,5 @@ public class PlayerMovement : MonoBehaviour
         pos.x += deltaX;
         transform.position = pos;
     }
+}
 }

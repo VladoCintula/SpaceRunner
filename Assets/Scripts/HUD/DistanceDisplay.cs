@@ -1,17 +1,22 @@
 using UnityEngine;
 using TMPro;
+using SpaceRunner.World;
 
-/// <summary>
-/// Zobrazuje aktuálnu preletenú vzdialenos hráèa v leveli.
-///
-/// Pouíva dva mechanizmy súèasne:
-///   - Pull: v Update() èíta distanceTracker.CurrentDistance pre kontinuálny readout.
-///   - Observer: prihlásenı na OnMilestoneReached pre vizuálny flash pri milestone.
-///
-/// Toto je vedomé pouitie oboch patternov v jednej triede — kontinuálna hodnota
-/// patrí pull-u, bod v èase patrí eventu.
-/// </summary>
-public class DistanceDisplay : MonoBehaviour
+
+namespace SpaceRunner.HUD
+{
+
+    /// <summary>
+    /// Zobrazuje aktuálnu preletenú vzdialenos hráèa v leveli.
+    ///
+    /// Pouíva dva mechanizmy súèasne:
+    ///   - Pull: v Update() èíta distanceTracker.CurrentDistance pre kontinuálny readout.
+    ///   - Observer: prihlásenı na OnMilestoneReached pre vizuálny flash pri milestone.
+    ///
+    /// Toto je vedomé pouitie oboch patternov v jednej triede — kontinuálna hodnota
+    /// patrí pull-u, bod v èase patrí eventu.
+    /// </summary>
+    public class DistanceDisplay : MonoBehaviour
 {
     [Header("Závislosti")]
     [SerializeField] private DistanceTracker _distanceTracker;
@@ -63,4 +68,5 @@ public class DistanceDisplay : MonoBehaviour
             _distanceText.color = Color.white;
         }
     }
+}
 }

@@ -1,19 +1,23 @@
 using System;
 using UnityEngine;
+using SpaceRunner.Player;
 
-/// <summary>
-/// Sleduje preletenú vertikálnu vzdialenos hráèa.
-///
-/// Pripoèítavanie: cos(uhol_lode) × v_max × deltaTime — uhol a rıchlos pull-uje
-/// z PlayerMovement (kontinuálny stav, pull pattern).
-///
-/// Publishuje event OnMilestoneReached pri kadom prekroèení milestone-u
-/// (napr. kadıch 100 m). Subscriber-i (HUD, neskôr Audio, Achievements)
-/// reagujú na bod v èase (observer pattern).
-///
-/// Detail dizajnového rozhodnutia v 21.01.01 Koncept.md.
-/// </summary>
-public class DistanceTracker : MonoBehaviour
+namespace SpaceRunner.World
+{
+
+    /// <summary>
+    /// Sleduje preletenú vertikálnu vzdialenos hráèa.
+    ///
+    /// Pripoèítavanie: cos(uhol_lode) × v_max × deltaTime — uhol a rıchlos pull-uje
+    /// z PlayerMovement (kontinuálny stav, pull pattern).
+    ///
+    /// Publishuje event OnMilestoneReached pri kadom prekroèení milestone-u
+    /// (napr. kadıch 100 m). Subscriber-i (HUD, neskôr Audio, Achievements)
+    /// reagujú na bod v èase (observer pattern).
+    ///
+    /// Detail dizajnového rozhodnutia v 21.01.01 Koncept.md.
+    /// </summary>
+    public class DistanceTracker : MonoBehaviour
 {
     [Header("Závislosti")]
     [SerializeField] private PlayerMovement _playerMovement;
@@ -47,4 +51,5 @@ public class DistanceTracker : MonoBehaviour
             OnMilestoneReached?.Invoke(currentMilestoneNumber * _milestoneInterval);
         }
     }
+}
 }

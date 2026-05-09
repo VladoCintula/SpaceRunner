@@ -156,7 +156,7 @@ MonoBehaviour:
   - {fileID: 5278856687011775721, guid: 76901ced5acf0e54ca6b85515c281936, type: 3}
   - {fileID: 5278856687011775721, guid: 7dc8ad100cfe6284e8844cfe55d383ab, type: 3}
   _flipHorizontally: 1
-  _player: {fileID: 1691035014}
+  _conveyor: {fileID: 590606270}
 --- !u!4 &162810828
 Transform:
   m_ObjectHideFlags: 0
@@ -166,7 +166,7 @@ Transform:
   m_GameObject: {fileID: 162810826}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 6, z: 0}
+  m_LocalPosition: {x: 5, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -244,7 +244,7 @@ Transform:
   m_GameObject: {fileID: 398570574}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5, y: 6, z: 0}
+  m_LocalPosition: {x: -5, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -270,7 +270,7 @@ MonoBehaviour:
   - {fileID: 5278856687011775721, guid: 76901ced5acf0e54ca6b85515c281936, type: 3}
   - {fileID: 5278856687011775721, guid: 7dc8ad100cfe6284e8844cfe55d383ab, type: 3}
   _flipHorizontally: 0
-  _player: {fileID: 1691035014}
+  _conveyor: {fileID: 590606270}
 --- !u!1 &402032337
 GameObject:
   m_ObjectHideFlags: 0
@@ -560,6 +560,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &590606268
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 590606269}
+  - component: {fileID: 590606270}
+  m_Layer: 0
+  m_Name: WallConveyor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &590606269
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 590606268}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &590606270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 590606268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ab0417c692889a498c63fab38faef6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.World.WallConveyor
+  _player: {fileID: 1691035014}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -973,3 +1018,4 @@ SceneRoots:
   - {fileID: 1650778050}
   - {fileID: 398570575}
   - {fileID: 162810828}
+  - {fileID: 590606269}

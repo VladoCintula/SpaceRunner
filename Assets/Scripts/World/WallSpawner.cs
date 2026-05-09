@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using SpaceRunner.Player;
 
 namespace SpaceRunner.World
 {
@@ -16,7 +15,7 @@ namespace SpaceRunner.World
     public class WallSpawner : MonoBehaviour
     {
         [Header("Pool")]
-        [Tooltip("Wall prefabs to choose from. Each must have a WallScroller component.")]
+        [Tooltip("Wall prefabs to choose from. Each must have a WallSegment component.")]
         [SerializeField] private GameObject[] _wallPrefabs;
 
         [Header("Side configuration")]
@@ -24,8 +23,8 @@ namespace SpaceRunner.World
         [SerializeField] private bool _flipHorizontally;
 
         [Header("Dependencies")]
-        [Tooltip("Player reference passed to each new wall via WallScroller.Initialize.")]
-        [SerializeField] private PlayerMovement _player;
+        [Tooltip("Conveyor that all spawned walls are parented to. Scroll movement is inherited via transform hierarchy.")]
+        [SerializeField] private WallConveyor _conveyor;
 
         // Bag shuffle state
         private readonly List<int> _bag = new List<int>();
@@ -58,8 +57,7 @@ namespace SpaceRunner.World
             int wallIndex = DrawFromBag();
             GameObject prefab = _wallPrefabs[wallIndex];
 
-            // Temporary spawn position — we'll reposition once we know the real height.
-            GameObject newWall = Instantiate(prefab, transform.position, Quaternion.identity);
+            GameObject newWall = Instantiate(prefab, transform.position, Quaternion.identity, _conveyor.transform);
 
             if (_flipHorizontally)
             {
@@ -69,14 +67,13 @@ namespace SpaceRunner.World
             if (_lastWall != null)
             {
                 float heightNew = newWall.GetComponent<SpriteRenderer>().bounds.size.y;
-                newWall.transform.position = new Vector3(
-                    transform.position.x,
-                    _lastWall.transform.position.y + heightNew,
-                    0f
-                );
+                float lastY = _lastWall.transform.position.y;
+                float newY = lastY + heightNew;
+
+                newWall.transform.position = new Vector3(transform.position.x, newY, 0f);
+
             }
 
-            newWall.GetComponent<WallScroller>().Initialize(_player);
             _lastWall = newWall;
         }
 

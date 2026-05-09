@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 478812713742883155}
   - component: {fileID: 1129686854609786405}
-  - component: {fileID: 5933426670046466118}
+  - component: {fileID: 1439062772946657460}
   m_Layer: 0
   m_Name: WallMedium_01
   m_TagString: Untagged
@@ -91,7 +91,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &5933426670046466118
+--- !u!114 &1439062772946657460
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,8 +100,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5278856687011775721}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a5e40385349c0e409d5de8534e648ec, type: 3}
+  m_Script: {fileID: 11500000, guid: e0e50dd92bcbd7f4ca4ad457a4a41773, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.World.WallScroller
-  _player: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.World.WallSegment
   _despawnY: -6

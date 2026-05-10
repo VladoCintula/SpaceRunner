@@ -165,12 +165,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 162810826}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 5, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1650778050}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &396737281
 GameObject:
@@ -243,12 +243,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 398570574}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -5, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1650778050}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &398570576
 MonoBehaviour:
@@ -585,12 +585,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 590606268}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1650778050}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &590606270
 MonoBehaviour:
@@ -689,6 +689,86 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1301132665
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1301132666}
+  - component: {fileID: 1301132667}
+  m_Layer: 0
+  m_Name: MeteoriteSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1301132666
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1301132665}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 13.10594, y: 0.92599, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1650778050}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1301132667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1301132665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e753a8548fdf9649b0ae849dd65e74e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.Meteorites.MeteoriteSpawner
+  _distanceTracker: {fileID: 396737283}
+  _meteoritesParent: {fileID: 590606269}
+  _levelTargetDistance: 1000
+  _spawnRateStart: 0.5
+  _spawnRateEnd: 4
+  _spawnLineY: 6
+  _spawnXMin: -3
+  _spawnXMax: 3
+  _coneHalfAngleDegrees: 30
+  _weightSmall: 1
+  _weightMedium: 1
+  _weightLarge: 1
+  _smallData:
+    minSpeed: 4
+    maxSpeed: 7
+    minRotationDegPerSec: 90
+    maxRotationDegPerSec: 180
+    prefabs:
+    - {fileID: 2461749789114731362, guid: 23a9bccb774a51a47a9d27dc844a0caa, type: 3}
+    - {fileID: 2461749789114731362, guid: 4ad2acbef1a69ca4c93466833ebde895, type: 3}
+  _mediumData:
+    minSpeed: 2
+    maxSpeed: 4
+    minRotationDegPerSec: 45
+    maxRotationDegPerSec: 90
+    prefabs:
+    - {fileID: 2461749789114731362, guid: 4bd21723c2f8e6b4b8429aaf5fcdcfde, type: 3}
+    - {fileID: 2461749789114731362, guid: 8d6cdca798a61d34d8c33b00de39050b, type: 3}
+  _largeData:
+    minSpeed: 0.5
+    maxSpeed: 2
+    minRotationDegPerSec: 15
+    maxRotationDegPerSec: 45
+    prefabs:
+    - {fileID: 2461749789114731362, guid: dab9355a174ea8e44a743b1b240817cd, type: 3}
+    - {fileID: 2461749789114731362, guid: 123610b6f99ec714fbb395adec56877c, type: 3}
 --- !u!1 &1541990743
 GameObject:
   m_ObjectHideFlags: 0
@@ -816,11 +896,15 @@ Transform:
   m_GameObject: {fileID: 1650778049}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -14.37981, y: -0.69449, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 396737282}
+  - {fileID: 1301132666}
+  - {fileID: 398570575}
+  - {fileID: 162810828}
+  - {fileID: 590606269}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1691035012
@@ -1016,6 +1100,3 @@ SceneRoots:
   - {fileID: 1541990747}
   - {fileID: 2110568137}
   - {fileID: 1650778050}
-  - {fileID: 398570575}
-  - {fileID: 162810828}
-  - {fileID: 590606269}

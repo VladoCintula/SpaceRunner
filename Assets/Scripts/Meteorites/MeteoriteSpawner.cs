@@ -18,7 +18,8 @@ namespace SpaceRunner.Meteorites
             public float maxSpeed = 3f;
             public float minRotationDegPerSec = 30f;
             public float maxRotationDegPerSec = 90f;
-            public GameObject[] prefabs;  // varianty pre túto veľkosť
+            public float mass = 1f; // hmotnosť pre vzorec elastickej kolízie (Q2 — single source)
+            public GameObject[] prefabs; // varianty pre túto veľkosť
         }
 
         [Header("Dependencies")]
@@ -128,7 +129,7 @@ namespace SpaceRunner.Meteorites
             // 7. Instantiate + Initialize
             GameObject obj = Instantiate(prefab, spawnPos, Quaternion.Euler(0f, 0f, startAngle), _meteoritesParent);
             Meteorite meteorite = obj.GetComponent<Meteorite>();
-            meteorite.Initialize(velocity, signedRotation);
+            meteorite.Initialize(velocity, signedRotation, data.mass);
         }
 
         private MeteoriteSize PickSize()

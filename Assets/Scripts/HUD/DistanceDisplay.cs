@@ -2,71 +2,75 @@ using UnityEngine;
 using TMPro;
 using SpaceRunner.World;
 
-
 namespace SpaceRunner.HUD
 {
-
     /// <summary>
-    /// Zobrazuje aktu·lnu preleten˙ vzdialenosù hr·Ëa v leveli.
+    /// Renders the player's current flown distance in the level.
     ///
-    /// PouûÌva dva mechanizmy s˙Ëasne:
-    ///   - Pull: v Update() ËÌta distanceTracker.CurrentDistance pre kontinu·lny readout.
-    ///   - Observer: prihl·sen˝ na OnMilestoneReached pre vizu·lny flash pri milestone.
+    /// Uses both communication patterns simultaneously and on purpose:
+    ///   - Pull: in Update() reads distanceTracker.CurrentDistance for the continuous readout.
+    ///   - Observer: subscribed to OnMilestoneReached for the per-milestone visual flash.
     ///
-    /// Toto je vedomÈ pouûitie oboch patternov v jednej triede ó kontinu·lna hodnota
-    /// patrÌ pull-u, bod v Ëase patrÌ eventu.
+    /// Continuous value ‚Üí pull. Point-in-time event ‚Üí observer. Mixing both in one class
+    /// is fine when the data has both natures.
+    ///
+    /// Design rationale: master Architekt√∫ra, principle 2 "Pull for continuous state, observer for point in time".
     /// </summary>
     public class DistanceDisplay : MonoBehaviour
-{
-    [Header("Z·vislosti")]
-    [SerializeField] private DistanceTracker _distanceTracker;
-    [SerializeField] private TextMeshProUGUI _distanceText;
-
-    [Header("Flash effect")]
-    [Tooltip("DÂûka vizu·lneho flash-u pri dosiahnutÌ milestone-u (sekundy).")]
-    [SerializeField] private float _flashDurationSeconds = 0.2f;
-
-    // Lok·lny stav: ako dlho eöte trv· flash (sekundy). 0 = uû nie je flash.
-    private float _remainingFlashTime = 0f;
-
-
-    private void OnEnable()
     {
-        _distanceTracker.OnMilestoneReached += PerformFlash;
-    }
+        [Header("Dependencies")]
+        [Tooltip("Source of CurrentDistance (pulled every frame) and OnMilestoneReached (subscribed in OnEnable).")]
+        [SerializeField] private DistanceTracker _distanceTracker;
 
-    private void OnDisable()
-    {
-        _distanceTracker.OnMilestoneReached -= PerformFlash;
-    }
+        [Tooltip("TMP label that displays the distance readout. Color is also driven by this script (red during a flash, white otherwise).")]
+        [SerializeField] private TextMeshProUGUI _distanceText;
 
+        [Header("Flash effect")]
+        [Tooltip("Duration of the red flash on the readout when a milestone is crossed (seconds).")]
+        [SerializeField] private float _flashDurationSeconds = 0.2f;
 
-    // Handler metÛda, ktor· reaguje na OnMilestoneReached.
-    // Logika: nastav remainingFlashTime = flashDurationSeconds.
-    // T˝m spustÌö flash, ktor˝ Update() postupne dokonËÌ.
-    void PerformFlash(int _milestone)
-    {
-        _remainingFlashTime = _flashDurationSeconds;
-    }
+        // Remaining flash time in seconds. 0 = not flashing.
+        private float _remainingFlashTime = 0f;
 
-
-    void Update()
-    {
-        // 1. Pull: aktualizuj text aktu·lnou vzdialenosùou.
-        // (int) zaokr˙hli na celÈ metre pre Ëitateæn˝ readout.
-        int distanceMeters = (int)_distanceTracker.CurrentDistance;
-        _distanceText.text = $"{distanceMeters} m";
-
-        // 2. Vizu·lny flash: ak pr·ve flashujeme, aplikuj Ëerven˙ farbu, inak bielu.
-        if (_remainingFlashTime > 0f)
+        /// <summary>Subscribe to milestone events. Paired with OnDisable so the handler tracks the component's enabled state.</summary>
+        private void OnEnable()
         {
-            _distanceText.color = Color.red;
-            _remainingFlashTime -= Time.deltaTime;
+            _distanceTracker.OnMilestoneReached += PerformFlash;
         }
-        else
+
+        /// <summary>Symmetric unsubscribe. Must use the same method reference as the OnEnable += for it to take effect.</summary>
+        private void OnDisable()
         {
-            _distanceText.color = Color.white;
+            _distanceTracker.OnMilestoneReached -= PerformFlash;
+        }
+
+        /// <summary>
+        /// Milestone event handler. Starts a flash by resetting the remaining flash time;
+        /// Update() consumes it down to zero and restores the white color.
+        /// </summary>
+        /// <param name="_milestone">Milestone value in metres. Not used here ‚Äî only the trigger matters.</param>
+        private void PerformFlash(int _milestone)
+        {
+            _remainingFlashTime = _flashDurationSeconds;
+        }
+
+        private void Update()
+        {
+            // 1. Pull: refresh the readout from the current distance.
+            // (int) rounds down to whole metres for a readable display.
+            int distanceMeters = (int)_distanceTracker.CurrentDistance;
+            _distanceText.text = $"{distanceMeters} m";
+
+            // 2. Visual flash: red while a flash is active, white otherwise.
+            if (_remainingFlashTime > 0f)
+            {
+                _distanceText.color = Color.red;
+                _remainingFlashTime -= Time.deltaTime;
+            }
+            else
+            {
+                _distanceText.color = Color.white;
+            }
         }
     }
-}
 }

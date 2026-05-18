@@ -1,88 +1,90 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace SpaceRunner.Player
 {
     /// <summary>
-    /// Riadi pohyb a natočenie hráčovej lode podľa pozície kurzora myši.
+    /// Drives ship movement and rotation from the mouse cursor position.
     ///
-    /// Pohybový model: konštantná celková rýchlosť v_max, rozkladá sa cez sin(uhol)
-    /// na horizontálny pohyb. Lod má fixnú y-pozíciu, vertikálna zložka pohybu sa
-    /// neaplikuje na pozíciu, ale je dostupná pre iné systémy cez CurrentAngleRadians
-    /// (napr. DistanceTracker pre cos-projekciu progresu v leveli).
+    /// Movement model: constant total speed v_max, decomposed via sin(angle) into
+    /// horizontal motion. The ship has a fixed y; the vertical component never moves
+    /// the ship, but the angle is exposed via CurrentAngleRadians so other systems
+    /// (e.g. DistanceTracker via cos-projection) can derive their own values from
+    /// the same source of truth.
     ///
-    /// Detail dizajnového rozhodnutia v 21.01.01 Koncept.md, sekcia "Pohybový model lode".
+    /// Design rationale: 21.01.01 Koncept.md, section "Pohybový model lode".
     /// </summary>
     public class PlayerMovement : MonoBehaviour
-{
-    [Header("Pohybové parametre")]
-    [Tooltip("Maximálna celková rýchlosť lode (world units / sec). Horizontálny pohyb = v_max × sin(uhol).")]
-    [SerializeField] private float _maxSpeed = 5f;
-
-    /// <summary>
-    /// Aktuálny uhol natočenia lode od vertikály, v radiánoch.
-    /// Rozsah: -π/2 (90° doľava) až +π/2 (90° doprava). 0 = priamo hore.
-    /// Vystavené pull-pattern pre iné systémy (DistanceTracker, neskôr Weapon).
-    /// </summary>
-    public float CurrentAngleRadians { get; private set; }
-
-    /// <summary>Maximálna celková rýchlosť — pre DistanceTracker (cos-projekcia progresu).</summary>
-    public float MaxSpeed => _maxSpeed;
-
-    private Camera _mainCamera;
-
-    void Awake()
     {
-        // Camera.main je relatívne pomalý lookup (cez tag) — cache-ujeme raz.
-        _mainCamera = Camera.main;
-    }
+        [Header("Movement parameters")]
+        [Tooltip("Maximum total ship speed (world units / sec). Horizontal speed = v_max * sin(angle from vertical).")]
+        [SerializeField] private float _maxSpeed = 5f;
 
-    void Update()
-    {
-        // 1. Kurzor v world súradniciach.
-        // ScreenToWorldPoint vyžaduje aj z-súradnicu (vzdialenosť od kamery).
-        Vector3 mouseScreen = Input.mousePosition;
-        mouseScreen.z = -_mainCamera.transform.position.z;
-        Vector3 cursorWorld = _mainCamera.ScreenToWorldPoint(mouseScreen);
+        /// <summary>
+        /// Current ship rotation angle from vertical, in radians.
+        /// Range: -π/2 (90° left) to +π/2 (90° right). 0 = straight up.
+        /// Pull-pattern surface for other systems (DistanceTracker, later Weapons).
+        /// </summary>
+        public float CurrentAngleRadians { get; private set; }
 
-        // 2. Cap kurzora pod loďou.
-        // Z dizajnu: ak je kurzor pod úrovňou lode, pre výpočet ho považujeme za
-        // ležiaci na úrovni lode. Tým sa uhol nedostane nad ±90° v abs. hodnote.
-        if (cursorWorld.y < transform.position.y)
+        /// <summary>Maximum total speed — single source of truth for downstream consumers (e.g. DistanceTracker uses it for cos-projection of progress).</summary>
+        public float MaxSpeed => _maxSpeed;
+
+        // Cached at Awake; Camera.main does a tag-based lookup each call,
+        // which is too slow to repeat every frame.
+        private Camera _mainCamera;
+
+        /// <summary>Caches Camera.main once at startup (Camera.main is a tag lookup, not free).</summary>
+        private void Awake()
         {
-            cursorWorld.y = transform.position.y;
+            _mainCamera = Camera.main;
         }
 
-        // 3. Vektor od lode ku kurzoru.
-        Vector2 toCursor = (Vector2)(cursorWorld - transform.position);
-
-        // 3b. Mŕtva zóna v okolí lode.
-        // Pri kurzore príliš blízko (alebo presne pri) lode by Atan2(0, 0) bol nedefinovaný
-        // a pri kurzore pod loďou (po cape y → lod.y) by Atan2 skákal medzi ±π/2,
-        // čo vedie k bang-bang oscilácii. V deadzone proste nehýbeme.
-        const float DEAD_ZONE_RADIUS = 0.3f;
-        if (toCursor.sqrMagnitude < DEAD_ZONE_RADIUS * DEAD_ZONE_RADIUS)
+        private void Update()
         {
-            return;
+            // 1. Cursor in world coordinates.
+            // ScreenToWorldPoint needs a z-distance from the camera.
+            Vector3 mouseScreen = Input.mousePosition;
+            mouseScreen.z = -_mainCamera.transform.position.z;
+            Vector3 cursorWorld = _mainCamera.ScreenToWorldPoint(mouseScreen);
+
+            // 2. Clamp cursor below the ship.
+            // Design rule: if the cursor sits below the ship, treat it as being on the
+            // ship's y-line for the angle computation. This keeps |angle| ≤ 90°.
+            if (cursorWorld.y < transform.position.y)
+            {
+                cursorWorld.y = transform.position.y;
+            }
+
+            // 3. Vector from ship to cursor.
+            Vector2 toCursor = (Vector2)(cursorWorld - transform.position);
+
+            // 3b. Dead zone around the ship.
+            // If the cursor is right at the ship, Atan2(0, 0) is undefined; just below
+            // it (after the y-clamp) Atan2 would oscillate between ±π/2 frame to frame,
+            // producing visible bang-bang flicker. In the dead zone we simply hold state.
+            const float DEAD_ZONE_RADIUS = 0.3f;
+            if (toCursor.sqrMagnitude < DEAD_ZONE_RADIUS * DEAD_ZONE_RADIUS)
+            {
+                return;
+            }
+
+            // 4. Angle from vertical, in radians.
+            // Mathf.Atan2(x, y) with swapped argument order returns the angle from +Y.
+            // Positive = cursor on the right, negative = cursor on the left.
+            CurrentAngleRadians = Mathf.Atan2(toCursor.x, toCursor.y);
+
+            // 5. Apply rotation.
+            // Unity 2D rotation around Z is counter-clockwise (positive = visually left).
+            // Our angle is clockwise-from-vertical, hence the minus sign.
+            float angleDegrees = -CurrentAngleRadians * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0f, 0f, angleDegrees);
+
+            // 6. Apply horizontal motion.
+            // horizontal_velocity = v_max * sin(angle). Time.deltaTime → frame-rate independent.
+            float deltaX = _maxSpeed * Mathf.Sin(CurrentAngleRadians) * Time.deltaTime;
+            Vector3 pos = transform.position;
+            pos.x += deltaX;
+            transform.position = pos;
         }
-
-        // 4. Uhol od vertikály v radiánoch.
-        // Mathf.Atan2(x, y) — prehodené poradie argumentov vracia uhol od +Y osi.
-        // Kladný = kurzor vpravo, záporný = kurzor vľavo.
-        CurrentAngleRadians = Mathf.Atan2(toCursor.x, toCursor.y);
-
-        // 5. Aplikuj rotáciu na loď.
-        // Unity 2D rotácia okolo Z je counter-clockwise (kladný uhol = vizuálne doľava).
-        // Náš uhol je clockwise-from-vertical, preto znamienko mínus.
-        float angleDegrees = -CurrentAngleRadians * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0f, 0f, angleDegrees);
-
-        // 6. Aplikuj horizontálny pohyb.
-        // horizontálna_rýchlosť = v_max × sin(uhol).
-        // Time.deltaTime → frame-rate independent pohyb.
-        float deltaX = _maxSpeed * Mathf.Sin(CurrentAngleRadians) * Time.deltaTime;
-        Vector3 pos = transform.position;
-        pos.x += deltaX;
-        transform.position = pos;
     }
-}
 }

@@ -1,28 +1,47 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace SpaceRunner.Meteorites
 {
+    /// <summary>
+    /// A single meteorite entity. Carries its velocity, visual rotation rate and mass,
+    /// moves itself each frame on a straight line, and resolves elastic 2D collisions
+    /// with other meteorites in OnTriggerEnter2D.
+    ///
+    /// Motion paradigm A — straight line, constant velocity vector between events.
+    /// Velocity changes only on events (spawn, collision, future split), never via
+    /// continuous gravity or drag. Despawns when its world Y drops below _despawnY.
+    ///
+    /// Initialized once by MeteoriteSpawner via Initialize(...); SizeData on the
+    /// spawner is the single source of mass (see Devlog 2026-05-18, Q2 — Rigidbody2D.mass
+    /// is ignored for Kinematic bodies, so we keep our own field).
+    ///
+    /// Design rationale: 21.01.02 Meteority.md, sections "Pohyb meteoritov" and "Fyzika odrazov".
+    /// </summary>
     public class Meteorite : MonoBehaviour
     {
+        [Header("Despawn")]
+        [Tooltip("World Y below which the meteorite destroys itself. Should sit safely off-screen below the camera.")]
         [SerializeField] private float _despawnY = -10f;
 
-        private Vector2 _velocity; // vektor definujúci kam sa má meteorit pohnúť
-        private float _rotationDegPerSecond; // signed: + = CCW, - = CW (set-uje spawner)
-        private float _mass; // runtime-injected zo SizeData pri spawne (Q2)
+        // Runtime state, written once at Initialize and then updated by motion / collisions.
+        private Vector2 _velocity;
+        private float _rotationDegPerSecond; // signed: + = CCW, - = CW
+        private float _mass;                 // injected from SizeData at spawn time (Q2)
 
-        /// <summary>
-        /// Read-only okno na velocity pre resolver kolízie druhého meteoritu.
-        /// </summary>
+        /// <summary>Read-only window onto the velocity, used by the winning side of a meteorite↔meteorite collision resolver.</summary>
         public Vector2 Velocity => _velocity;
 
-        /// <summary>
-        /// Read-only okno na hmotnosť pre vzorec elastickej kolízie. Single source je SizeData.
-        /// </summary>
+        /// <summary>Read-only window onto the mass, used by the elastic collision formula. SizeData on the spawner is the single source.</summary>
         public float Mass => _mass;
 
         /// <summary>
-        /// Inicializácia po Instantiate. Spawner volá tesne po vytvorení meteoritu.
+        /// Post-Instantiate initializer. Called by MeteoriteSpawner immediately after
+        /// the GameObject is created — sets the runtime state that drives motion and
+        /// collision response.
         /// </summary>
+        /// <param name="velocity">Initial velocity vector (direction * speed).</param>
+        /// <param name="rotationDegPerSecond">Signed rotation rate around Z (+ = CCW, - = CW).</param>
+        /// <param name="mass">Mass for the elastic collision formula. Pulled from SizeData on the spawner.</param>
         public void Initialize(Vector2 velocity, float rotationDegPerSecond, float mass)
         {
             _velocity = velocity;
@@ -31,8 +50,9 @@ namespace SpaceRunner.Meteorites
         }
 
         /// <summary>
-        /// Prepíše velocity. Volá víťazný resolver kolízie (ten s nižším InstanceID),
-        /// keď zapisuje výsledok elastickej kolízie aj druhému meteoritu.
+        /// Overwrites the velocity. Called by the winning collision resolver (the meteorite
+        /// with the lower InstanceID) when it writes the post-collision velocity onto the
+        /// other meteorite of the pair.
         /// </summary>
         public void SetVelocity(Vector2 velocity)
         {
@@ -41,14 +61,14 @@ namespace SpaceRunner.Meteorites
 
         private void Update()
         {
-            // Pohyb pozície podľa velocity vektora
+            // 1. Straight-line motion along the current velocity vector.
             transform.position += (Vector3)_velocity * Time.deltaTime;
 
-            // 2. Vizuálna rotácia okolo z-osi (Z, lebo 2D hra v xy rovine).
-            // Znamienko v _rotationDegPerSecond určuje smer CW/CCW.
+            // 2. Visual rotation around Z (2D game in xy plane). Sign of
+            //    _rotationDegPerSecond selects CW vs CCW.
             transform.Rotate(0f, 0f, _rotationDegPerSecond * Time.deltaTime);
 
-            // 3. Despawn pri opustení obrazovky smerom dole.
+            // 3. Despawn once the meteorite has left the screen downward.
             if (transform.position.y < _despawnY)
             {
                 Destroy(gameObject);
@@ -56,25 +76,35 @@ namespace SpaceRunner.Meteorites
         }
 
         /// <summary>
-        /// Kolízia meteorit↔meteorit. Oba meteority fire-nú tento handler v tom istom
-        /// physics kroku; ID guard zabezpečí, že pár vyrieši len jeden z nich.
+        /// Meteorite↔meteorite collision handler. Both meteorites of a pair fire this
+        /// handler in the same physics step; an InstanceID guard makes only one of them
+        /// (the lower ID) compute the response and write the result onto both.
+        ///
+        /// Physics: fully elastic 2D collision. Velocity of each meteorite is decomposed
+        /// onto the collision normal n = (B - A).normalized and the tangent. Tangential
+        /// components survive unchanged; normal components are redistributed using the
+        /// standard mass-weighted elastic-collision formula.
+        ///
+        /// Wall collisions are intentionally not handled here — Wall × Meteorite is
+        /// disabled in the layer collision matrix and will be added in part 3 of the
+        /// meteorites work.
         /// </summary>
         private void OnTriggerEnter2D(Collider2D other)
         {
             Meteorite otherMeteorite = other.GetComponent<Meteorite>();
             if (otherMeteorite == null)
             {
-                // Nie je meteorit (stena rieši až časť 3; Wall×Meteorite je v matrixe OFF).
+                // Not a meteorite — wall collisions are out of scope for this part.
                 return;
             }
 
-            // ID guard (Q1): pár rieši len meteorit s nižším InstanceID, druhý skončí.
+            // ID guard: each pair resolves only once, on the side with the lower InstanceID.
             if (GetInstanceID() > otherMeteorite.GetInstanceID())
             {
                 return;
             }
 
-            // Vstupy pre vzorec — čítame OBA stavy pred akýmkoľvek zápisom.
+            // Read both states before any write.
             Vector2 posA = transform.position;
             Vector2 posB = otherMeteorite.transform.position;
             Vector2 vA = _velocity;
@@ -82,19 +112,11 @@ namespace SpaceRunner.Meteorites
             float mA = _mass;
             float mB = otherMeteorite.Mass;
 
-            // ──────────────────────────────────────────────────────────────
-            // TODO 1 (tvoja zóna — Stop & Learn 15.5., krok 1):
-            //   kolízna normála n pre kruh-kruh.
+            // Collision normal for the circle-circle case: unit vector from A to B.
             Vector2 n = (posB - posA).normalized;
-            // ──────────────────────────────────────────────────────────────
 
-            // ──────────────────────────────────────────────────────────────
-            // TODO 2 (tvoja zóna — Stop & Learn 15.5., kroky 2–6):
-            //   dekompozícia vA, vB na normálovú + tangenciálnu zložku,
-            //   tangenciálne sa nemenia, NORMÁLOVÉ sa prerozdelia podľa
-            //   hmotností (všeobecný vzorec pre rôzne mA, mB), rekompozícia.
-
-            float aN = vA.x * n.x + vA.y * n.y;   // alebo Vector2.Dot(vA, n)
+            // Decompose vA, vB into normal + tangential components.
+            float aN = vA.x * n.x + vA.y * n.y;   // == Vector2.Dot(vA, n)
             float bN = vB.x * n.x + vB.y * n.y;
 
             Vector2 vA_v_n = aN * n;
@@ -103,14 +125,15 @@ namespace SpaceRunner.Meteorites
             Vector2 vB_v_n = bN * n;
             Vector2 vB_v_t = vB - vB_v_n;
 
-
+            // Mass-weighted elastic redistribution of the normal components;
+            // tangential components survive unchanged.
             Vector2 vA_new = ((mA - mB) * vA_v_n + 2 * mB * vB_v_n) / (mA + mB) + vA_v_t;
             Vector2 vB_new = ((mB - mA) * vB_v_n + 2 * mA * vA_v_n) / (mA + mB) + vB_v_t;
-            // ──────────────────────────────────────────────────────────────
 
-            // HOOK Q3 (Možnosť B — TERAZ NEAPLIKUJEME):
-            //   ak prototyp ukáže časté lietanie hore → sem clamp y-zložky
-            //   + renormalizácia magnitúdy. Možnosť A = akceptujeme realistickú fyziku.
+            // Hook for Q3 (option B): if the prototype shows meteorites frequently
+            // gaining a slight +y after collisions, clamp the y-component and renormalize
+            // magnitude here. Currently disabled — option A (accept realistic physics).
+            // See Otvorené otázky #6.
 
             _velocity = vA_new;
             otherMeteorite.SetVelocity(vB_new);

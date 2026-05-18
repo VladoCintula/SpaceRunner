@@ -4,52 +4,54 @@ using SpaceRunner.Player;
 
 namespace SpaceRunner.World
 {
-
     /// <summary>
-    /// Sleduje preleten˙ vertik·lnu vzdialenosù hr·Ëa.
+    /// Tracks the player's flown vertical distance through the current level.
     ///
-    /// PripoËÌtavanie: cos(uhol_lode) ◊ v_max ◊ deltaTime ó uhol a r˝chlosù pull-uje
-    /// z PlayerMovement (kontinu·lny stav, pull pattern).
+    /// Distance accumulation uses cos(ship_angle) * v_max * deltaTime ‚Äî angle and
+    /// max speed are pulled from PlayerMovement every frame (pull pattern for
+    /// continuous state).
     ///
-    /// Publishuje event OnMilestoneReached pri kaûdom prekroËenÌ milestone-u
-    /// (napr. kaûd˝ch 100 m). Subscriber-i (HUD, neskÙr Audio, Achievements)
-    /// reaguj˙ na bod v Ëase (observer pattern).
+    /// Publishes OnMilestoneReached whenever the player crosses a milestone threshold
+    /// (e.g. every 100 m). Subscribers (HUD, later Audio, Achievements) react to a
+    /// point-in-time event (observer pattern).
     ///
-    /// Detail dizajnovÈho rozhodnutia v 21.01.01 Koncept.md.
+    /// Design rationale: 21.01.01 Koncept.md, section "Y-zlo≈æka projekcie a preleten√° vzdialenos≈•";
+    /// master Architekt√∫ra, principle 2 "Pull for continuous state, observer for point in time".
     /// </summary>
     public class DistanceTracker : MonoBehaviour
-{
-    [Header("Z·vislosti")]
-    [SerializeField] private PlayerMovement _playerMovement;
-
-    [Header("Parametre")]
-    [Tooltip("Vzdialenosù medzi milestone-ami (world units / metre).")]
-    [SerializeField] private int _milestoneInterval = 100;
-
-    /// <summary>Aktu·lna preleten· vzdialenosù v leveli (world units).</summary>
-    public float CurrentDistance { get; private set; }
-
-    // Deklaracia public event - hodnota dosiahnuteho milestone v metroch (napr. 100, 200, 300, ...)
-    public event Action<int> OnMilestoneReached;
-
-    // Lok·lny stav pre detekciu prekroËenia milestone-u.
-    // DrûÌ "ËÌslo poslednÈho hl·senÈho milestone-u" (0 = ûiadny, 1 = prv˝, 2 = druh˝, ...).
-    private int _lastMilestoneReported = 0;
-
-    void Update()
     {
-        // 1. PripoËÌtaj vzdialenosù za tento frame.
-        float angle = _playerMovement.CurrentAngleRadians;
-        float maxSpeed = _playerMovement.MaxSpeed;
-        CurrentDistance += Mathf.Cos(angle) * maxSpeed * Time.deltaTime;
+        [Header("Dependencies")]
+        [Tooltip("Source of CurrentAngleRadians and MaxSpeed (pulled every frame).")]
+        [SerializeField] private PlayerMovement _playerMovement;
 
-        // 2. Detekuj prekroËenie milestone-u a publikuj event.
-        int currentMilestoneNumber = (int)(CurrentDistance / _milestoneInterval);
-        if (currentMilestoneNumber > _lastMilestoneReported)
+        [Header("Parameters")]
+        [Tooltip("Distance between milestones (world units / metres). Each crossing fires OnMilestoneReached.")]
+        [SerializeField] private int _milestoneInterval = 100;
+
+        /// <summary>Current flown distance in the level (world units).</summary>
+        public float CurrentDistance { get; private set; }
+
+        /// <summary>Fires once per milestone crossing. Argument: milestone value in metres (100, 200, 300, ...).</summary>
+        public event Action<int> OnMilestoneReached;
+
+        // Index of the last reported milestone (0 = none yet, 1 = first, 2 = second, ...).
+        // Used to detect threshold crossings without re-firing for the same milestone.
+        private int _lastMilestoneReported = 0;
+
+        private void Update()
         {
-            _lastMilestoneReported = currentMilestoneNumber;
-            OnMilestoneReached?.Invoke(currentMilestoneNumber * _milestoneInterval);
+            // 1. Accumulate distance for this frame.
+            float angle = _playerMovement.CurrentAngleRadians;
+            float maxSpeed = _playerMovement.MaxSpeed;
+            CurrentDistance += Mathf.Cos(angle) * maxSpeed * Time.deltaTime;
+
+            // 2. Detect a milestone crossing and publish.
+            int currentMilestoneNumber = (int)(CurrentDistance / _milestoneInterval);
+            if (currentMilestoneNumber > _lastMilestoneReported)
+            {
+                _lastMilestoneReported = currentMilestoneNumber;
+                OnMilestoneReached?.Invoke(currentMilestoneNumber * _milestoneInterval);
+            }
         }
     }
-}
 }

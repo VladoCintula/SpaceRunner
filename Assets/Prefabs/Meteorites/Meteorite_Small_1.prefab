@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7141995543286384943}
   - component: {fileID: -436758820912988818}
   - component: {fileID: 4071552109310395928}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Meteorite_Small_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,6 +106,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpaceRunner.Meteorites.Meteorite
   _despawnY: -10
+  _despawnYTop: 8
+  _wallLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!50 &-436758820912988818
 Rigidbody2D:
   serializedVersion: 5

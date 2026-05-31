@@ -22,6 +22,11 @@ namespace SpaceRunner.Meteorites
         [Header("Despawn")]
         [Tooltip("World Y below which the meteorite destroys itself. Should sit safely off-screen below the camera.")]
         [SerializeField] private float _despawnY = -10f;
+        [SerializeField] private float _despawnYTop = 8f;   // tesne pod spawn líniou 
+
+        [SerializeField] private LayerMask _wallLayer;      // v Inspectore nastav na vrstvu Wall
+
+        private Collider2D _collider;                       // vlastný collider, cache (rozhodnutie Q3)
 
         // Runtime state, written once at Initialize and then updated by motion / collisions.
         private Vector2 _velocity;
@@ -49,6 +54,13 @@ namespace SpaceRunner.Meteorites
             _mass = mass;
         }
 
+        private void Awake()
+        {
+            // .Distance voláme každú kolíziu so stenou; GetComponent v handleri by bol
+            // zbytočný opakovaný lookup (ten istý dôvod ako cache Camera.main v PlayerMovement).
+            _collider = GetComponent<Collider2D>();
+        }
+
         /// <summary>
         /// Overwrites the velocity. Called by the winning collision resolver (the meteorite
         /// with the lower InstanceID) when it writes the post-collision velocity onto the
@@ -73,6 +85,11 @@ namespace SpaceRunner.Meteorites
             {
                 Destroy(gameObject);
             }
+
+            // Horný despawn: variant C bez clamp-u smie poslať meteorit hore; zachytíme ho
+            // PRED bez-stenovou zónou (scenár 2 leak aj scenár 3 x-únik naraz).
+            if (transform.position.y > _despawnYTop)
+                Destroy(gameObject);
         }
 
         /// <summary>
@@ -95,6 +112,8 @@ namespace SpaceRunner.Meteorites
             if (otherMeteorite == null)
             {
                 // Not a meteorite — wall collisions are out of scope for this part.
+                if (IsWall(other))
+                    ResolveWallCollision(other);
                 return;
             }
 
@@ -137,6 +156,31 @@ namespace SpaceRunner.Meteorites
 
             _velocity = vA_new;
             otherMeteorite.SetVelocity(vB_new);
+        }
+
+        private bool IsWall(Collider2D col)
+        {
+            // _wallLayer je LayerMask z Inspectora; bitový test = "patrí vrstva col do masky?"
+            return (_wallLayer.value & (1 << col.gameObject.layer)) != 0;
+        }
+
+        private void ResolveWallCollision(Collider2D wallCollider)
+        {
+            // Žiadny ID guard, žiadny zápis druhej strane: stena nemá handler,
+            // meteorit je jediný resolver
+
+            // --- TODO 1 (tvoje): kolízna normála z triggeru ---
+            // Zavolaj _collider.Distance(wallCollider). Z výsledku (ColliderDistance2D)
+            // vezmi .normal a urob z neho jednotkový Vector2 'n'
+            // (defenzívne .normalized — caveat 2 zo Stop & Learn).
+            Vector2 n = _collider.Distance(wallCollider).normal.normalized;
+
+            // --- TODO 2 (tvoje): čistá reflexia v' = v - 2(v·n)n ---
+            // Z _velocity a 'n' spočítaj odrazenú velocity (Vector2.Dot) a zapíš ju
+            // PRIAMO do _velocity. NIE SetVelocity — to je na zápis DRUHÉMU meteoritu;
+            // tu píšeš sebe. Žiadny clamp (variant C), vzorec je sign-invariantný v n.
+            /* TODO 2 */
+            _velocity = _velocity - 2f * Vector2.Dot(_velocity, n) * n;
         }
     }
 }

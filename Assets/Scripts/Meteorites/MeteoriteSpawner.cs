@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using SpaceRunner.World;
+using Random = UnityEngine.Random; 
 
 namespace SpaceRunner.Meteorites
 {
@@ -102,6 +104,26 @@ namespace SpaceRunner.Meteorites
         [Tooltip("Large meteorite parameters.")]
         [SerializeField] private SizeData _largeData;
 
+        // ─── Events ─────────────────────────────────────────────────
+        // Fired by SpawnMeteorite() right after Initialize. Plný publisher
+        // pattern — spawner volá Invoke priamo.
+        public event Action<MeteoriteSize, Vector2> OnMeteoriteSpawned;
+
+        // Re-emitted from Meteorite.Die() via NotifyDestroyed back-call
+        // (Variant A proxy publisher pattern).
+        public event Action<MeteoriteSize, Vector2> OnMeteoriteDestroyed;
+
+        // Internal raise mechanism for OnMeteoriteDestroyed — callable only
+        // by Meteorite.Die() via the cached back-reference. Internal (not public)
+        // because C# events cannot be invoked outside the publishing class;
+        // a named internal method preserves that contract.
+        internal void NotifyDestroyed(MeteoriteSize size, Vector2 position)
+        {
+            OnMeteoriteDestroyed?.Invoke(size, position);
+        }
+
+        // ────────────────────────────────────────────────────────────
+
         // Handle to the running spawn coroutine — kept so OnDisable can stop it cleanly.
         private Coroutine _spawnRoutine;
 
@@ -187,7 +209,11 @@ namespace SpaceRunner.Meteorites
             //    the Meteorite component.
             GameObject obj = Instantiate(prefab, spawnPos, Quaternion.Euler(0f, 0f, startAngle), _meteoritesParent);
             Meteorite meteorite = obj.GetComponent<Meteorite>();
-            meteorite.Initialize(velocity, signedRotation, data.mass);
+            meteorite.Initialize(velocity, signedRotation, data.mass, size, this);
+
+            // Invariant #5: Initialize → Invoke (subscriber vidí plne inicializovaný meteorit).
+            OnMeteoriteSpawned?.Invoke(size, spawnPos);
+
         }
 
         /// <summary>Picks a size using the configured relative weights. Higher weight = more likely.</summary>

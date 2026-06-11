@@ -33,11 +33,16 @@ namespace SpaceRunner.Meteorites
         private float _rotationDegPerSecond; // signed: + = CCW, - = CW
         private float _mass;                 // injected from SizeData at spawn time (Q2)
 
+        private MeteoriteSpawner.MeteoriteSize _size;
+        private MeteoriteSpawner _spawner;
+
         /// <summary>Read-only window onto the velocity, used by the winning side of a meteorite↔meteorite collision resolver.</summary>
         public Vector2 Velocity => _velocity;
 
         /// <summary>Read-only window onto the mass, used by the elastic collision formula. SizeData on the spawner is the single source.</summary>
         public float Mass => _mass;
+
+        public MeteoriteSpawner.MeteoriteSize Size => _size;
 
         /// <summary>
         /// Post-Instantiate initializer. Called by MeteoriteSpawner immediately after
@@ -47,11 +52,18 @@ namespace SpaceRunner.Meteorites
         /// <param name="velocity">Initial velocity vector (direction * speed).</param>
         /// <param name="rotationDegPerSecond">Signed rotation rate around Z (+ = CCW, - = CW).</param>
         /// <param name="mass">Mass for the elastic collision formula. Pulled from SizeData on the spawner.</param>
-        public void Initialize(Vector2 velocity, float rotationDegPerSecond, float mass)
+        public void Initialize(
+            Vector2 velocity,
+            float rotationDegPerSecond,
+            float mass,
+            MeteoriteSpawner.MeteoriteSize size,
+            MeteoriteSpawner spawner)
         {
             _velocity = velocity;
             _rotationDegPerSecond = rotationDegPerSecond;
             _mass = mass;
+            _size = size;
+            _spawner = spawner;
         }
 
         private void Awake()
@@ -69,6 +81,15 @@ namespace SpaceRunner.Meteorites
         public void SetVelocity(Vector2 velocity)
         {
             _velocity = velocity;
+        }
+
+
+        public void Die()
+        {
+
+            _spawner.NotifyDestroyed(Size, transform.position);
+
+            Destroy(gameObject);
         }
 
         private void Update()

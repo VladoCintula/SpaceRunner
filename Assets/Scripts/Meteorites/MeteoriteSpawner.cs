@@ -17,7 +17,7 @@ namespace SpaceRunner.Meteorites
     /// the same reference frame as the corridor walls.
     ///
     /// Velocity direction is drawn from a downward cone of ±_coneHalfAngleDegrees
-    /// from vertical, magnitude from the per-size range. Mass comes from SizeData
+    /// from vertical, magnitude from the per-size range at native spawn; inherited from parent at split. Mass comes from SizeData
     /// and is the single source for the elastic collision formula in Meteorite.cs.
     ///
     /// Design rationale: 21.01.02 Meteority.md, sections "Pohyb meteoritov" and "Generovanie meteoritov".
@@ -83,6 +83,13 @@ namespace SpaceRunner.Meteorites
         [Header("Spawn cone")]
         [Tooltip("Half-angle (degrees) of the cone of launch directions, measured from vertical-down. ±30° is the design default — guarantees meteorites never fly upward or strictly sideways at spawn.")]
         [SerializeField] private float _coneHalfAngleDegrees = 30f;
+
+        [Header("Split (rozpad)")]
+        [SerializeField, Range(0f, 60f), Tooltip("Base angle deviation of each child from parent's direction, in degrees")]
+        private float _splitDeltaThetaDeg = 25f;
+
+        [SerializeField, Range(0f, 30f), Tooltip("Random variance added to each child's split angle, in degrees")]
+        private float _splitVarianceDeg = 5f;
 
         [Header("Size distribution (relative weights)")]
         [Tooltip("Relative weight of Small in the size pick. Only the ratio Small : Medium : Large matters, not the absolute values.")]
@@ -168,52 +175,108 @@ namespace SpaceRunner.Meteorites
         }
 
         /// <summary>
-        /// Picks a size, draws speed and rotation from the matching SizeData range,
-        /// chooses a launch direction in the downward cone, instantiates the prefab,
-        /// and hands the runtime state to the Meteorite via Initialize(...).
+        /// Picks a size and a spawn position on the spawn line, draws a launch angle
+        /// from the downward cone, and delegates the actual construction to SpawnAt.
         /// </summary>
         private void SpawnMeteorite()
         {
             // 1. Pick a size by weight.
             MeteoriteSize size = PickSize();
-            SizeData data = GetSizeData(size);
 
-            // 2. Pick a sprite variant.
-            GameObject prefab = data.prefabs[Random.Range(0, data.prefabs.Length)];
-
-            // 3. Spawn position: random x in the corridor band, fixed y above screen.
+            // 2. Spawn position: random x in the corridor band, fixed y above screen.
             float spawnX = Random.Range(_spawnXMin, _spawnXMax);
             Vector2 spawnPos = new Vector2(spawnX, _spawnLineY);
 
-            // 4. Random starting sprite rotation (uniform 0–360°), so identical
-            //    sprites don't look identical at spawn.
+            // 3. Launch angle δ uniform within ±_coneHalfAngleDegrees from vertical-down.
+            float delta = Random.Range(-_coneHalfAngleDegrees, _coneHalfAngleDegrees);
+
+            // 4. Magnitude rolled from the per-size range (native spawn only — split inherits).
+            SizeData data = GetSizeData(size);
+            float speed = Random.Range(data.minSpeed, data.maxSpeed);
+
+            SpawnAt(size, spawnPos, delta, speed);
+        }
+
+        /// <summary>
+        /// Constructs a single meteorite of <paramref name="size"/> at <paramref name="position"/>,
+        /// launched at <paramref name="angleDegFromVertical"/> degrees from vertical-down with the
+        /// given velocity <paramref name="speed"/>. Encapsulates prefab pick, rotation roll,
+        /// instantiation, the Initialize wire-up (incl. the back-reference) and the OnMeteoriteSpawned
+        /// emit. Shared by random spawn (SpawnMeteorite) and split spawn (SpawnSplitChildren) — both
+        /// differ only in how angle and speed are chosen by the caller; the velocity schema
+        /// "(sin δ, -cos δ) × speed" is identical (21.01.02 Meteority, "Rozpad meteoritu po zostrelení").
+        /// The magnitude is supplied by the caller, not rolled here — native spawn rolls it from the
+        /// per-size range, split inherits it from the parent.
+        /// </summary>
+        private void SpawnAt(MeteoriteSize size, Vector2 position, float angleDegFromVertical, float speed)
+        {
+            SizeData data = GetSizeData(size);
+
+            // Sprite variant, uniform random.
+            GameObject prefab = data.prefabs[Random.Range(0, data.prefabs.Length)];
+
+            // Random starting sprite rotation (uniform 0–360°) so identical sprites
+            // don't look identical at spawn.
             float startAngle = Random.Range(0f, 360f);
 
-            // 5. Velocity vector.
-            // Angle offset δ uniform within ±_coneHalfAngleDegrees from vertical-down.
-            // Direction = (sin δ, -cos δ) — unit vector for "cone around down".
-            // Magnitude = uniform in [minSpeed, maxSpeed].
-            float randomDelta = Random.Range(-_coneHalfAngleDegrees, _coneHalfAngleDegrees);
-            float randomDeltaRad = Mathf.Deg2Rad * randomDelta;
-            Vector2 direction = new Vector2(Mathf.Sin(randomDeltaRad), -Mathf.Cos(randomDeltaRad));
-            float speed = Random.Range(data.minSpeed, data.maxSpeed);
+            // Velocity: direction (sin δ, -cos δ) from vertical-down, magnitude from the caller.
+            float deltaRad = Mathf.Deg2Rad * angleDegFromVertical;
+            Vector2 direction = new Vector2(Mathf.Sin(deltaRad), -Mathf.Cos(deltaRad));
             Vector2 velocity = direction * speed;
 
-            // 6. Signed rotation rate: magnitude from the range, sign 50/50.
+            // Signed rotation rate: magnitude from the range, sign 50/50.
             float rotMagnitude = Random.Range(data.minRotationDegPerSec, data.maxRotationDegPerSec);
             float rotSign = Random.value < 0.5f ? -1f : 1f;
             float signedRotation = rotMagnitude * rotSign;
 
-            // 7. Instantiate and parent under _meteoritesParent (WallConveyor) so the
-            //    meteorite inherits the world scroll, then push the runtime state into
-            //    the Meteorite component.
-            GameObject obj = Instantiate(prefab, spawnPos, Quaternion.Euler(0f, 0f, startAngle), _meteoritesParent);
+            // Instantiate and parent under _meteoritesParent (WallConveyor) so the meteorite
+            // inherits the world scroll, then push the runtime state into the Meteorite.
+            GameObject obj = Instantiate(prefab, position, Quaternion.Euler(0f, 0f, startAngle), _meteoritesParent);
             Meteorite meteorite = obj.GetComponent<Meteorite>();
             meteorite.Initialize(velocity, signedRotation, data.mass, size, this);
 
             // Invariant #5: Initialize → Invoke (subscriber vidí plne inicializovaný meteorit).
-            OnMeteoriteSpawned?.Invoke(size, spawnPos);
+            OnMeteoriteSpawned?.Invoke(size, position);
+        }
 
+        /// <summary>
+        /// Spawns the two smaller children of a destroyed meteorite (Large → 2× Medium,
+        /// Medium → 2× Small). Small does not split — the call is ignored. Called from
+        /// Meteorite.Die() via the back-reference (Variant A proxy publisher pattern).
+        ///
+        /// Each child's launch angle is the parent's direction split by ±(_splitDeltaThetaDeg
+        /// + per-child variance); one child gets the plus offset, the other the minus. Variance
+        /// is rolled independently per child. No clamp on the resulting angle — children may
+        /// fly upward, in which case the existing _despawnYTop catches them (design decision:
+        /// 21.01.02 Meteority, "Žiadny clamp uhla").
+        ///
+        /// Children inherit the parent's velocity magnitude (|velocity_child| = |velocity_parent|) —
+        /// the split adds no kinetic energy. The per-size speed range is NOT rolled here; it applies
+        /// only to native spawn (21.01.02 Meteority, "Rozpad meteoritu po zostrelení").
+        /// </summary>
+        public void SpawnSplitChildren(MeteoriteSize parentSize, Vector2 parentPosition, Vector2 parentVelocity)
+        {
+            if (parentSize == MeteoriteSize.Small)
+            {
+                return;
+            }
+
+            MeteoriteSize childSize = parentSize == MeteoriteSize.Large
+                ? MeteoriteSize.Medium
+                : MeteoriteSize.Small;
+
+            // Parent's launch angle from vertical-down — inverse of the (sin δ, -cos δ) schema.
+            float parentAngle = Mathf.Atan2(parentVelocity.x, -parentVelocity.y) * Mathf.Rad2Deg;
+
+            // Children inherit the parent's speed; no per-size roll on split.
+            float parentSpeed = parentVelocity.magnitude;
+
+            // Two children mirrored around the parent direction; variance independent per child.
+            float offsetPlus = _splitDeltaThetaDeg + Random.Range(-_splitVarianceDeg, _splitVarianceDeg);
+            float offsetMinus = _splitDeltaThetaDeg + Random.Range(-_splitVarianceDeg, _splitVarianceDeg);
+
+            SpawnAt(childSize, parentPosition, parentAngle + offsetPlus, parentSpeed);
+            SpawnAt(childSize, parentPosition, parentAngle - offsetMinus, parentSpeed);
         }
 
         /// <summary>Picks a size using the configured relative weights. Higher weight = more likely.</summary>

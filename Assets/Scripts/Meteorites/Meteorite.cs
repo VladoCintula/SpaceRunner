@@ -86,8 +86,12 @@ namespace SpaceRunner.Meteorites
 
         public void Die()
         {
+            // Order: split → notify → destroy. Children spawn before NotifyDestroyed so
+            // subscribers see the OnMeteoriteSpawned (children) events ahead of this
+            // meteorite's OnMeteoriteDestroyed. Small ignores the split call.
+            _spawner.SpawnSplitChildren(_size, transform.position, _velocity);
 
-            _spawner.NotifyDestroyed(Size, transform.position);
+            _spawner.NotifyDestroyed(_size, transform.position);
 
             Destroy(gameObject);
         }

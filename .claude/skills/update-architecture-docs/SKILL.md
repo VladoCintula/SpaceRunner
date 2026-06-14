@@ -11,10 +11,11 @@ This skill keeps per-class architecture documents in `_Architektúra/` aligned w
 
 Before doing anything else, read these documents in this order:
 
-1. `C:\CinSoftGames\00-09 Plánovanie\02 Workflow vývoja hier.md` — sections *Pravidlá pre Claude Code pri písaní do vault-u* and *Štruktúra architektúrnej dokumentácie*. These define the rules and the per-class document template.
-2. `C:\CinSoftGames\20 Games\21 Learning Games\21.01 SpaceRunner\21.01.07 Architektúra.md` — system map, principles, folder layout. Per-class docs reference these by name.
-3. `C:\CinSoftGames\20 Games\21 Learning Games\21.01 SpaceRunner\_Architektúra\` — list existing per-class documents to know what's already there.
-4. The relevant `.cs` files under `Assets/Scripts/` — only the ones in scope for the current task.
+1. `C:\CinSoftGames\00-09 Plánovanie\05 Pravidlá pre Claude Code.md` — operational rules: vault write scope, per-class doc update gating, out-of-scope buffer convention, reporting format. These rules are binding.
+2. `C:\CinSoftGames\00-09 Plánovanie\04 Dokumentačná architektúra.md` — section *Štruktúra architektúrnej dokumentácie* (per-class template) and *Úroveň detailu v Architektúre* (level B definition). These define the document format.
+3. `C:\CinSoftGames\20 Games\21 Learning Games\21.01 SpaceRunner\21.01.07 Architektúra.md` — system map, principles, folder layout. Per-class docs reference these by name.
+4. `C:\CinSoftGames\20 Games\21 Learning Games\21.01 SpaceRunner\_Architektúra\` — list existing per-class documents to know what's already there.
+5. The relevant `.cs` files under `Assets/Scripts/` — only the ones in scope for the current task.
 
 If any of these reads fails, stop and report the problem rather than guessing.
 

@@ -742,6 +742,8 @@ MonoBehaviour:
   _spawnXMin: -3
   _spawnXMax: 3
   _coneHalfAngleDegrees: 30
+  _splitDeltaThetaDeg: 25
+  _splitVarianceDeg: 5
   _weightSmall: 1
   _weightMedium: 1
   _weightLarge: 1
@@ -754,6 +756,8 @@ MonoBehaviour:
     prefabs:
     - {fileID: 2461749789114731362, guid: 23a9bccb774a51a47a9d27dc844a0caa, type: 3}
     - {fileID: 2461749789114731362, guid: 4ad2acbef1a69ca4c93466833ebde895, type: 3}
+    minHealth: 1
+    maxHealth: 1
   _mediumData:
     minSpeed: 2
     maxSpeed: 4
@@ -763,6 +767,8 @@ MonoBehaviour:
     prefabs:
     - {fileID: 2461749789114731362, guid: 4bd21723c2f8e6b4b8429aaf5fcdcfde, type: 3}
     - {fileID: 2461749789114731362, guid: 8d6cdca798a61d34d8c33b00de39050b, type: 3}
+    minHealth: 4
+    maxHealth: 9
   _largeData:
     minSpeed: 0.5
     maxSpeed: 2
@@ -772,6 +778,8 @@ MonoBehaviour:
     prefabs:
     - {fileID: 2461749789114731362, guid: dab9355a174ea8e44a743b1b240817cd, type: 3}
     - {fileID: 2461749789114731362, guid: 123610b6f99ec714fbb395adec56877c, type: 3}
+    minHealth: 10
+    maxHealth: 15
 --- !u!1 &1541990743
 GameObject:
   m_ObjectHideFlags: 0
@@ -983,7 +991,7 @@ Transform:
   m_GameObject: {fileID: 1691035012}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

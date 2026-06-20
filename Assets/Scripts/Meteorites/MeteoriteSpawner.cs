@@ -51,6 +51,9 @@ namespace SpaceRunner.Meteorites
 
             [Tooltip("Prefab variants for this size — one is picked uniformly at random per spawn.")]
             public GameObject[] prefabs;
+
+            public int minHealth;   
+            public int maxHealth;   
         }
 
         [Header("Dependencies")]
@@ -233,7 +236,22 @@ namespace SpaceRunner.Meteorites
             // inherits the world scroll, then push the runtime state into the Meteorite.
             GameObject obj = Instantiate(prefab, position, Quaternion.Euler(0f, 0f, startAngle), _meteoritesParent);
             Meteorite meteorite = obj.GetComponent<Meteorite>();
-            meteorite.Initialize(velocity, signedRotation, data.mass, size, this);
+
+            float progress = Mathf.Clamp01(_distanceTracker.CurrentDistance / _levelTargetDistance);
+            int health;
+
+            if(size == MeteoriteSize.Small)
+            {
+                health = 1;
+            }
+            else
+            {
+                float mode = Mathf.Lerp(data.minHealth, data.maxHealth, progress);
+                health = Mathf.Clamp(Mathf.RoundToInt(SampleTriangular(data.minHealth, data.maxHealth, mode)), data.minHealth, data.maxHealth);
+            }
+
+
+            meteorite.Initialize(velocity, signedRotation, data.mass, health, size, this);
 
             // Invariant #5: Initialize → Invoke (subscriber vidí plne inicializovaný meteorit).
             OnMeteoriteSpawned?.Invoke(size, position);
@@ -299,6 +317,19 @@ namespace SpaceRunner.Meteorites
                 case MeteoriteSize.Large: return _largeData;
                 default: return _smallData;
             }
+        }
+
+        private float SampleTriangular(float a, float b, float c)
+        {
+            // inverse-transform sampling
+            float u = Random.value;
+            float fc = (c - a) / (b - a);
+
+            if(u < fc) 
+                return a + Mathf.Sqrt(u * (b - a) * (c - a));
+            else
+                return b - Mathf.Sqrt((1f - u) * (b - a) * (b - c));
+
         }
     }
 }

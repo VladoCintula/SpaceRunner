@@ -33,6 +33,8 @@ namespace SpaceRunner.Meteorites
         private float _rotationDegPerSecond; // signed: + = CCW, - = CW
         private float _mass;                 // injected from SizeData at spawn time (Q2)
 
+        private int _health;
+
         private MeteoriteSpawner.MeteoriteSize _size;
         private MeteoriteSpawner _spawner;
 
@@ -56,11 +58,13 @@ namespace SpaceRunner.Meteorites
             Vector2 velocity,
             float rotationDegPerSecond,
             float mass,
+            int health,
             MeteoriteSpawner.MeteoriteSize size,
             MeteoriteSpawner spawner)
         {
             _velocity = velocity;
             _rotationDegPerSecond = rotationDegPerSecond;
+            _health = health;
             _mass = mass;
             _size = size;
             _spawner = spawner;
@@ -81,6 +85,13 @@ namespace SpaceRunner.Meteorites
         public void SetVelocity(Vector2 velocity)
         {
             _velocity = velocity;
+        }
+
+        public void TakeDamage(int amount)  
+        {
+            _health -= amount;
+            if (_health <= 0)
+                Die(); 
         }
 
 

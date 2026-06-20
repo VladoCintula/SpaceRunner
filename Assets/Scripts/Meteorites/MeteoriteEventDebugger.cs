@@ -39,7 +39,8 @@ namespace SpaceRunner.Meteorites
                 Meteorite target = FindObjectOfType<Meteorite>();
                 if (target != null)
                 {
-                    target.Die();
+                    // target.Die();
+                    target.TakeDamage(1);
                 }
                 else
                 {

@@ -18,7 +18,9 @@ namespace SpaceRunner.Meteorites
     ///
     /// Velocity direction is drawn from a downward cone of ±_coneHalfAngleDegrees
     /// from vertical, magnitude from the per-size range at native spawn; inherited from parent at split. Mass comes from SizeData
-    /// and is the single source for the elastic collision formula in Meteorite.cs.
+    /// and is the single source for the elastic collision formula in Meteorite.cs. Each
+    /// meteorite's HP is rolled from a triangular distribution whose mode slides with
+    /// level progress (Small is always 1) and injected via Initialize.
     ///
     /// Design rationale: 21.01.02 Meteority.md, sections "Pohyb meteoritov" and "Generovanie meteoritov".
     /// </summary>
@@ -52,8 +54,11 @@ namespace SpaceRunner.Meteorites
             [Tooltip("Prefab variants for this size — one is picked uniformly at random per spawn.")]
             public GameObject[] prefabs;
 
-            public int minHealth;   
-            public int maxHealth;   
+            [Tooltip("Lower bound of the HP range for this size — the triangular sampler's minimum (and the mode at level start). Unused for Small (HP is hard-coded to 1).")]
+            public int minHealth;
+
+            [Tooltip("Upper bound of the HP range — the triangular sampler's maximum (and the mode at level end). Unused for Small.")]
+            public int maxHealth;
         }
 
         [Header("Dependencies")]
@@ -237,10 +242,14 @@ namespace SpaceRunner.Meteorites
             GameObject obj = Instantiate(prefab, position, Quaternion.Euler(0f, 0f, startAngle), _meteoritesParent);
             Meteorite meteorite = obj.GetComponent<Meteorite>();
 
+            // HP roll (shared by native spawn and split, so a Medium is a Medium regardless
+            // of origin). The mode slides along the HP axis with level progress — near
+            // minHealth at the start, near maxHealth at the end. Small is hard-coded to 1:
+            // both by design and to dodge the division-by-zero in SampleTriangular at min == max.
             float progress = Mathf.Clamp01(_distanceTracker.CurrentDistance / _levelTargetDistance);
             int health;
 
-            if(size == MeteoriteSize.Small)
+            if (size == MeteoriteSize.Small)
             {
                 health = 1;
             }
@@ -319,17 +328,25 @@ namespace SpaceRunner.Meteorites
             }
         }
 
+        /// <summary>
+        /// Samples a triangular distribution with min <paramref name="a"/>, max
+        /// <paramref name="b"/> and mode <paramref name="c"/> via inverse-transform
+        /// sampling (Unity has no built-in triangular distribution). Returns a float in
+        /// [a, b]; the caller rounds and clamps. Assumes a &lt; b — Small avoids the
+        /// division-by-zero in fc by being special-cased before this is ever called.
+        /// </summary>
         private float SampleTriangular(float a, float b, float c)
         {
-            // inverse-transform sampling
+            // u must be float [0,1): Random.Range(0,1) is the int overload (max-exclusive,
+            // always 0). fc = share of the triangle's area left of the mode; it decides
+            // which leg u lands on. sqrt inverts the quadratic growth of area into position.
             float u = Random.value;
             float fc = (c - a) / (b - a);
 
-            if(u < fc) 
+            if (u < fc)
                 return a + Mathf.Sqrt(u * (b - a) * (c - a));
             else
                 return b - Mathf.Sqrt((1f - u) * (b - a) * (b - c));
-
         }
     }
 }

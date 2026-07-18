@@ -3,13 +3,18 @@ using UnityEngine;
 namespace SpaceRunner.Meteorites
 {
     /// <summary>
-    /// A single meteorite entity. Carries its velocity, visual rotation rate and mass,
-    /// moves itself each frame on a straight line, and resolves elastic 2D collisions
-    /// with other meteorites in OnTriggerEnter2D.
+    /// A single meteorite entity. Carries its velocity, visual rotation rate, mass and
+    /// hit points, moves itself each frame on a straight line, and resolves elastic 2D
+    /// collisions with other meteorites and with walls in OnTriggerEnter2D.
     ///
     /// Motion paradigm A — straight line, constant velocity vector between events.
-    /// Velocity changes only on events (spawn, collision, future split), never via
-    /// continuous gravity or drag. Despawns when its world Y drops below _despawnY.
+    /// Velocity changes only on events (spawn, meteorite/wall collision, split), never
+    /// via continuous gravity or drag. Despawns when its world Y leaves the screen
+    /// (below _despawnY or above _despawnYTop).
+    ///
+    /// Damage is driven externally via TakeDamage(int); when _health reaches 0 the
+    /// meteorite calls Die() (split → notify spawner → destroy). The HP value itself is
+    /// rolled by the spawner and injected through Initialize, not decided here.
     ///
     /// Initialized once by MeteoriteSpawner via Initialize(...); SizeData on the
     /// spawner is the single source of mass (see Devlog 2026-05-18, Q2 — Rigidbody2D.mass
@@ -33,7 +38,8 @@ namespace SpaceRunner.Meteorites
         private float _rotationDegPerSecond; // signed: + = CCW, - = CW
         private float _mass;                 // injected from SizeData at spawn time (Q2)
 
-        private int _health;
+        private int _health;                 // remaining hits to destruction; rolled by spawner, injected at Initialize
+        private bool _isDead;                 // double-kill guard: set in Die(), gates TakeDamage (Otvorené otázky #9)
 
         private MeteoriteSpawner.MeteoriteSize _size;
         private MeteoriteSpawner _spawner;
@@ -48,12 +54,15 @@ namespace SpaceRunner.Meteorites
 
         /// <summary>
         /// Post-Instantiate initializer. Called by MeteoriteSpawner immediately after
-        /// the GameObject is created — sets the runtime state that drives motion and
-        /// collision response.
+        /// the GameObject is created — sets the runtime state that drives motion,
+        /// collision response and the HP gate. Called exactly once (see invariant 2).
         /// </summary>
         /// <param name="velocity">Initial velocity vector (direction * speed).</param>
         /// <param name="rotationDegPerSecond">Signed rotation rate around Z (+ = CCW, - = CW).</param>
         /// <param name="mass">Mass for the elastic collision formula. Pulled from SizeData on the spawner.</param>
+        /// <param name="health">Hit points (hits until destruction). Rolled by the spawner from a triangular distribution (Large/Medium) or 1 (Small) — the meteorite only stores it.</param>
+        /// <param name="size">Size category, cached for the destroy-event payload and split decisions.</param>
+        /// <param name="spawner">Back-reference for the Variant A proxy publisher pattern — used by Die() to request split and notify destruction.</param>
         public void Initialize(
             Vector2 velocity,
             float rotationDegPerSecond,
@@ -87,16 +96,36 @@ namespace SpaceRunner.Meteorites
             _velocity = velocity;
         }
 
-        public void TakeDamage(int amount)  
+        /// <summary>
+        /// External damage entry point. Subtracts <paramref name="amount"/> from _health
+        /// and triggers Die() once HP reaches 0. The damage trigger lives outside the
+        /// meteorite — a Weapons projectile calls TakeDamage(1) on hit.
+        /// Guarded by _isDead so two projectile hits in the same frame can't drive
+        /// _health below zero twice and call Die() (and its events) twice — Otvorené otázky #9.
+        /// </summary>
+        public void TakeDamage(int amount)
         {
+            // Already dying from an earlier hit this frame — ignore further damage.
+            if (_isDead)
+                return;
+
             _health -= amount;
             if (_health <= 0)
-                Die(); 
+                Die();
         }
 
-
+        /// <summary>
+        /// Resolves the meteorite's death in order split → notify → destroy: asks the
+        /// spawner to spawn smaller children (Small ignores), re-emits OnMeteoriteDestroyed
+        /// via the back-reference, then destroys the GameObject. Order matters — see the
+        /// inline note and invariant 6.
+        /// </summary>
         public void Die()
         {
+            // First line: mark dead so a second same-frame TakeDamage early-returns
+            // instead of running the whole split → notify → destroy chain again.
+            _isDead = true;
+
             // Order: split → notify → destroy. Children spawn before NotifyDestroyed so
             // subscribers see the OnMeteoriteSpawned (children) events ahead of this
             // meteorite's OnMeteoriteDestroyed. Small ignores the split call.
